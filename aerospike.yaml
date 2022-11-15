@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    kubernetes.io/metadata.name: aerospike
+  name: aerospike
+spec:
+  finalizers:
+  - kubernetes
+---
+apiVersion: v1
+data:
+  features.conf: |+
+    # generated 2021-09-28 20:14:45
+
+    feature-key-version              2
+    serial-number                    733611202
+
+    account-name                     Evaluation_License
+
+    account-ID                       Aerospike__435711374
+
+    asdb-change-notification         true
+    asdb-cluster-nodes-limit         1
+    asdb-compression                 true
+    asdb-encryption-at-rest          true
+    asdb-ldap                        true
+    asdb-pmem                        true
+    asdb-strong-consistency          true
+    mesg-jms-connector               true
+    mesg-kafka-connector             true
+    presto-connector                 true
+    pulsar-connector                 true
+    raf-realtime-analysis-framework  true
+    spark-connector                  true
+
+kind: ConfigMap
+metadata:
+  name: aerospike-features
+  namespace: aerospike
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aerospike-deployment
+  labels:
+    app: aerospike
+  namespace: aerospike
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aerospike
+  template:
+    metadata:
+      labels:
+        app: aerospike
+    spec:
+      containers:
+      - name: aerospike
+        image: aerospike:ee-6.1.0.3
+        ports:
+        - containerPort: 3000
+        - containerPort: 3001
+        - containerPort: 3002
+        volumeMounts:
+        - name: features
+          mountPath: "/opt/aerospike/etc"
+        env:
+          - name: FEATURE_KEY_FILE
+            value: "/opt/aerospike/etc/features.conf"
+          - name: NAMESPACE
+            value: solo-namespace
+      volumes:
+        - name: features
+          configMap:
+            name: aerospike-features
+            items:
+              - key: features.conf
+                path: features.conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aerospike
+  namespace: aerospike
+  labels:
+    service: aerospike
+spec:
+  ports:
+  - port: 3000
+    protocol: TCP
+    name: aerospike-3000
+  - port: 3001
+    protocol: TCP
+    name: aerospike-3001
+  - port: 3002
+    protocol: TCP
+    name: aerospike-3002
+  selector:
+    app: aerospike

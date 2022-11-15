@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: aql-tools
+  labels:
+    app: aerospike-tools
+spec:
+  containers:
+    - name: aerospike-tools
+      image: aerospike/aerospike-tools:latest
+
